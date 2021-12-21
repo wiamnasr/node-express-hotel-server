@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const moment = require("moment");
 
 const bodyParser = require("body-parser");
 
@@ -13,6 +14,35 @@ app.use(cors());
 
 // Use this array as your (in-memory) data store.
 const bookings = require("./bookings.json");
+
+app.get("/bookings/search", (req, res) => {
+  const { date } = req.query;
+  const formattedDate = moment(date).format("YYYY-MM-DD");
+  if (formattedDate !== date) {
+    return res.status(400).json({
+      success: false,
+      msg: "Please fix date search format as such: 'search?date=YYYY-MM-DD'",
+    });
+  }
+
+  const matchingBookingDate = bookings.filter(
+    (booking) =>
+      booking.checkInDate === formattedDate ||
+      booking.checkOutDate === formattedDate
+  );
+
+  if (matchingBookingDate.length === 0) {
+    return res.status(404).json({
+      success: false,
+      msg: "It appears no bookings match your search date",
+    });
+  }
+
+  return res.status(200).json({
+    success: true,
+    matchingBookingDate,
+  });
+});
 
 app.delete("/bookings/:id", (req, res) => {
   const { id } = req.params;
