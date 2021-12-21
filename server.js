@@ -14,6 +14,43 @@ app.use(cors());
 // Use this array as your (in-memory) data store.
 const bookings = require("./bookings.json");
 
+app.delete("/bookings/:id", (req, res) => {
+  const { id } = req.params;
+  const remainingBookings = bookings.filter(
+    (booking) => booking.id !== parseInt(id)
+  );
+  const deletedBooking = bookings.find(
+    (booking) => booking.id === parseInt(id)
+  );
+
+  if (remainingBookings.length === bookings.length) {
+    return res.status(400).json({
+      success: false,
+      msg: "It appears that nothing was deleted, make sure the selected id exists...",
+    });
+  }
+
+  return res.status(200).json({
+    success: true,
+    remainingBookings,
+    deletedBooking,
+  });
+});
+
+app.get("/bookings/:id", (req, res) => {
+  const { id } = req.params;
+
+  const filteredBookings = bookings.filter(
+    (booking) => booking.id === parseInt(id)
+  );
+  if (filteredBookings.length === 0) {
+    return res.status(400).json({ success: false, msg: "no matching id..." });
+  }
+  if (filteredBookings.length > 0) {
+    return res.status(200).json({ success: true, bookings: filteredBookings });
+  }
+});
+
 app.post("/bookings", (req, res) => {
   const {
     title,
